@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2E7D32">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22My%20Tasks%20%26%20Notes%22,%22short_name%22:%22TasksNotes%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23F4F7F5%22,%22theme_color%22:%22%232E7D32%22}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <title>My Tasks, Notes & Events</title>
+  <style>
+    :root {
+      --bg: #F4F7F5; --text: #2C3E30; --card: #FFFFFF; 
+      --primary: #2E7D32; --primary-hover: #1B5E20;
+      --nav: #1E1E1E; --nav-active: #2E7D32; 
+      --border: #E0E8E0; --muted: #666;
+      --shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    [data-theme="dark"] {
+      --bg: #121612; --text: #E8F0E8; --card: #1E241E; 
+      --primary: #66BB6A; --primary-hover: #81C784;
+      --nav: #0A0C0A; --nav-active: #66BB6A; 
+      --border: #2A332A; --muted: #AAA;
+      --shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    * { box-sizing: border-box; }
+    body { 
+      font-family: 'Inter', -apple-system, sans-serif; 
+      margin: 0; padding: 0; background: var(--bg); color: var(--text); 
+      padding-bottom: calc(90px + env(safe-area-inset-bottom)); 
+      transition: background 0.3s, color 0.3s; -webkit-font-smoothing: antialiased;
+    }
+    header { 
+      background: var(--primary); color: white; padding: 20px 15px; 
+      display: flex; justify-content: space-between; align-items: center; 
+      position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    header h2 { margin: 0; font-size: 1.4rem; font-weight: 600; }
+    .theme-btn { 
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); 
+      padding: 8px 14px; border-radius: 20px; color: white; cursor: pointer; font-size: 14px; 
+    }
+    .tab-content { display: none; padding: 20px 15px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.3s ease; }
+    .active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* FIXED BOTTOM NAV - UPDATED FOR MOBILE SAFE AREA */
+    nav { 
+      position: fixed; bottom: 0; left: 0; width: 100%; display: flex; background: var(--nav); 
+      padding: 5px 0 calc(5px + env(safe-area-inset-bottom)); 
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 9999;
+    }
+    nav button { 
+      flex: 1; padding: 12px 5px calc(12px + env(safe-area-inset-bottom)); 
+      background: none; color: #AAA; border: none; cursor: pointer; 
+      font-size: 13px; font-weight: 500; display: flex; flex-direction: column; 
+      align-items: center; gap: 4px; position: relative; font-family: inherit;
+    }
+    nav button.active { color: white; }
+    nav button.active::before {
+      content: ''; position: absolute; top: 0; width: 30px; height: 3px; 
+      background: var(--nav-active); border-radius: 0 0 3px 3px;
+    }
+    
+    .card { 
+      background: var(--card); padding: 18px; margin-bottom: 14px; 
+      border-radius: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); 
+    }
+    input, textarea, select, button { 
+      width: 100%; margin: 8px 0; padding: 14px; font-size: 16px; 
+      border-radius: 12px; border: 1px solid var(--border); font-family: inherit;
+    }
+    input, textarea, select { background: var(--bg); color: var(--text); }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46,125,50,0.15); }
+    button { background: var(--primary); color: white; border: none; font-weight: 600; cursor: pointer; }
+    button:hover { background: var(--primary-hover); }
+    .btn-edit { background: #F0AD4E; } .btn-edit:hover { background: #EC971F; }
+    .btn-delete { background: #D9534F; } .btn-delete:hover { background: #C9302C; }
+    .btn-cancel { background: #888; } .btn-cancel:hover { background: #777; }
+    .task-item { display: flex; align-items: flex-start; gap: 12px; }
+    .task-info { flex: 1; } .task-done { text-decoration: line-through; opacity: 0.5; }
+    .task-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .task-actions button { padding: 10px; font-size: 14px; margin: 0; }
+    .search-filter-row { display: flex; gap: 8px; margin-bottom: 18px; }
+    .search-filter-row input { margin: 0; flex: 2; }
+    .search-filter-row select { margin: 0; flex: 1; }
+    .backup-btns { display: flex; gap: 12px; margin-top: 25px; }
+    hr { border: 0; border-top: 1px solid var(--border); margin: 25px 0; }
+    h3 { font-weight: 600; margin-top: 0; }
+    .category-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-top: 8px; }
+    .cat-General { background: #ECEFF1; color: #455A64; } .cat-Work { background: #E3F2FD; color: #1565C0; }
+    .cat-Personal { background: #F3E5F5; color: #6A1B9A; } .cat-Shopping { background: #FFF3E0; color: #E65100; }
+    .cat-Health { background: #E8F5E9; color: #2E7D32; }
+    [data-theme="dark"] .cat-General { background: #37474F; color: #CFD8DC; }
+    [data-theme="dark"] .cat-Work { background: #0D47A1; color: #82B1FF; }
+    [data-theme="dark"] .cat-Personal { background: #4A148C; color: #EA80FC; }
+    [data-theme="dark"] .cat-Shopping { background: #E65100; color: #FFCC80; }
+    [data-theme="dark"] .cat-Health { background: #1B5E20; color: #A5D6A7; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h2>My App</h2>
+  <button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
+</header>
+
+<section id="dashboard" class="tab-content active">
+  <h3>Dashboard</h3>
+  <div id="dash-stats"></div>
+  <div class="backup-btns">
+    <button onclick="exportData()">⬇️ Backup</button>
+    <button onclick="document.getElementById('import-file').click()" class="btn-edit">⬆️ Restore</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+  </div>
+</section>
+
+<section id="tasks" class="tab-content">
+  <h3>Tasks</h3>
+  <input type="text" id="task-title" placeholder="Task name">
+  <input type="date" id="task-date">
+  <input type="time" id="task-time">
+  <select id="task-category">
+    <option value="General">General</option><option value="Work">Work</option>
+    <option value="Personal">Personal</option><option value="Shopping">Shopping</option>
+    <option value="Health">Health</option>
+  </select>
+  <button id="task-submit-btn" onclick="saveTask()">Add Task</button>
+  <button id="task-cancel-btn" onclick="cancelEdit()" class="btn-cancel" style="display:none;">Cancel Edit</button>
+  <hr>
+  <div class="search-filter-row">
+    <input type="search" id="task-search" placeholder="🔍 Search..." oninput="renderTasks()">
+    <select id="task-filter" onchange="renderTasks()">
+      <option value="All">All</option><option value="General">General</option>
+      <option value="Work">Work</option><option value="Personal">Personal</option>
+      <option value="Shopping">Shopping</option><option value="Health">Health</option>
+    </select>
+  </div>
+  <div id="task-list"></div>
+</section>
+
+<section id="events" class="tab-content">
+  <h3>Events</h3>
+  <input type="text" id="event-title" placeholder="Event name">
+  <input type="date" id="event-date"><input type="time" id="event-time">
+  <input type="text" id="event-location" placeholder="Location (optional)">
+  <textarea id="event-details" placeholder="Event details..."></textarea>
+  <button id="event-submit-btn" onclick="saveEvent()">Add Event</button>
+  <button id="event-cancel-btn" onclick="cancelEditEvent()" class="btn-cancel" style="display:none;">Cancel Edit</button>
+  <hr>
+  <input type="search" id="event-search" placeholder="🔍 Search events..." oninput="renderEvents()" style="margin-bottom:18px;">
+  <div id="event-list"></div>
+</section>
+
+<section id="notes" class="tab-content">
+  <h3>Notes</h3>
+  <input type="text" id="note-title" placeholder="Note title">
+  <textarea id="note-body" placeholder="Write your note..."></textarea>
+  <button id="note-submit-btn" onclick="saveNote()">Save Note</button>
+  <button id="note-cancel-btn" onclick="cancelEditNote()" class="btn-cancel" style="display:none;">Cancel Edit</button>
+  <hr>
+  <input type="search" id="note-search" placeholder="🔍 Search notes..." oninput="renderNotes()" style="margin-bottom:18px;">
+  <div id="note-list"></div>
+</section>
+
+<!-- BOTTOM NAV (Ensure this is at the very end of body) -->
+<nav>
+  <button onclick="showTab('dashboard', this)" class="active">🏠 Dash</button>
+  <button onclick="showTab('tasks', this)">✅ Tasks</button>
+  <button onclick="showTab('events', this)">📅 Events</button>
+  <button onclick="showTab('notes', this)">📝 Notes</button>
+</nav>
+
+<script>
+if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+function toggleTheme() { const h=document.documentElement; const n=h.getAttribute('data-theme')==='dark'?'light':'dark'; h.setAttribute('data-theme',n); localStorage.setItem('theme',n); }
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(e=>e.classList.remove('active'));
+  document.getElementById(id).classList.add('active'); if(btn) btn.classList.add('active');
+  updateDashboard();
+}
+let editingTaskId=null;
+function saveTask(){ const t=tasktitle.value,d=taskdate.value,ti=tasktime.value,c=taskcategory.value; if(!t)return alert('Task name needed'); let x=JSON.parse(localStorage.tasks||'[]'); if(editingTaskId){x=x.map(o=>o.id===editingTaskId?{...o,title:t,date:d,time:ti,category:c}:o);}else{x.push({id:Date.now(),title:t,date:d,time:ti,category:c,done:false});} localStorage.tasks=JSON.stringify(x); cancelEdit(); renderTasks(); updateDashboard(); }
+function toggleTask(id){ let x=JSON.parse(localStorage.tasks||'[]'); x=x.map(o=>o.id===id?{...o,done:!o.done}:o); localStorage.tasks=JSON.stringify(x); renderTasks(); updateDashboard(); }
+function editTask(id){ const o=JSON.parse(localStorage.tasks||'[]').find(x=>x.id===id); tasktitle.value=o.title; taskdate.value=o.date; tasktime.value=o.time; taskcategory.value=o.category||'General'; editingTaskId=id; taskSubmitBtn.textContent='Update Task'; taskCancelBtn.style.display='block'; scrollTo(0,0); }
+function cancelEdit(){ editingTaskId=null; tasktitle.value=''; taskdate.value=''; tasktime.value=''; taskcategory.value='General'; taskSubmitBtn.textContent='Add Task'; taskCancelBtn.style.display='none'; }
+function deleteTask(id){ if(!confirm('Delete?'))return; let x=JSON.parse(localStorage.tasks||'[]').filter(o=>o.id!==id); localStorage.tasks=JSON.stringify(x); if(editingTaskId===id)cancelEdit(); renderTasks(); updateDashboard(); }
+function renderTasks(){ const q=tasksearch.value.toLowerCase(),cf=taskfilter.value; let x=JSON.parse(localStorage.tasks||'[]').filter(o=>o.title.toLowerCase().includes(q)); if(cf!=='All')x=x.filter(o=>o.category===cf); if(!x.length){tasklist.innerHTML='<p>No tasks.</p>';return;} tasklist.innerHTML=x.map(o=>`<div class='card'><div class='task-item'><input type='checkbox' ${o.done?'checked':''} onchange='toggleTask(${o.id})' style='width:auto;margin-top:5px;'><div class='task-info ${o.done?'task-done':''}'><strong>${o.title}</strong><br><small>📅 ${o.date} ⏰ ${o.time}</small><br><span class='category-badge cat-${o.category||'General'}'>${o.category||'General'}</span></div></div><div class='task-actions'><button onclick='editTask(${o.id})' class='btn-edit'>Edit</button><button onclick='deleteTask(${o.id})' class='btn-delete'>Delete</button></div></div>`).join(''); }
+
+let editingEventId=null;
+function saveEvent(){ const t=eventtitle.value,d=eventdate.value,ti=eventtime.value,l=eventlocation.value,de=eventdetails.value; if(!t)return alert('Event name needed'); let x=JSON.parse(localStorage.events||'[]'); if(editingEventId){x=x.map(o=>o.id===editingEventId?{...o,title:t,date:d,time:ti,location:l,details:de}:o);}else{x.push({id:Date.now(),title:t,date:d,time:ti,location:l,details:de});} localStorage.events=JSON.stringify(x); cancelEditEvent(); renderEvents(); updateDashboard(); }
+function editEvent(id){ const o=JSON.parse(localStorage.events||'[]').find(x=>x.id===id); eventtitle.value=o.title; eventdate.value=o.date; eventtime.value=o.time; eventlocation.value=o.location||''; eventdetails.value=o.details||''; editingEventId=id; eventSubmitBtn.textContent='Update Event'; eventCancelBtn.style.display='block'; scrollTo(0,0); }
+function cancelEditEvent(){ editingEventId=null; eventtitle.value=''; eventdate.value=''; eventtime.value=''; eventlocation.value=''; eventdetails.value=''; eventSubmitBtn.textContent='Add Event'; eventCancelBtn.style.display='none'; }
+function deleteEvent(id){ if(!confirm('Delete?'))return; let x=JSON.parse(localStorage.events||'[]').filter(o=>o.id!==id); localStorage.events=JSON.stringify(x); if(editingEventId===id)cancelEditEvent(); renderEvents(); updateDashboard(); }
+function renderEvents(){ const q=eventsearch.value.toLowerCase(); let x=JSON.parse(localStorage.events||'[]').filter(o=>(o.title+o.location).toLowerCase().includes(q)); if(!x.length){eventlist.innerHTML='<p>No events.</p>';return;} eventlist.innerHTML=x.map(o=>`<div class='card'><div class='task-item'><div class='task-info'><strong>${o.title}</strong><br><small>📅 ${o.date} ⏰ ${o.time}</small>${o.location?`<br><small>📍 ${o.location}</small>`:''}${o.details?`<p style='margin:8px 0 0;font-size:14px;color:var(--muted);'>${o.details}</p>`:''}</div></div><div class='task-actions'><button onclick='editEvent(${o.id})' class='btn-edit'>Edit</button><button onclick='deleteEvent(${o.id})' class='btn-delete'>Delete</button></div></div>`).join(''); }
+
+let editingNoteId=null;
+function saveNote(){ const t=notetitle.value,b=notebody.value; if(!t)return alert('Note title needed'); let x=JSON.parse(localStorage.notes||'[]'); if(editingNoteId){x=x.map(o=>o.id===editingNoteId?{...o,title:t,body:b,timestamp:Date.now(),created:new Date().toLocaleString()}:o);}else{x.push({id:Date.now(),title:t,body:b,timestamp:Date.now(),created:new Date().toLocaleString()});} localStorage.notes=JSON.stringify(x); cancelEditNote(); renderNotes(); updateDashboard(); }
+function editNote(id){ const o=JSON.parse(localStorage.notes||'[]').find(x=>x.id===id); notetitle.value=o.title; notebody.value=o.body; editingNoteId=id; noteSubmitBtn.textContent='Update Note'; noteCancelBtn.style.display='block'; scrollTo(0,0); }
+function cancelEditNote(){ editingNoteId=null; notetitle.value=''; notebody.value=''; noteSubmitBtn.textContent='Save Note'; noteCancelBtn.style.display='none'; }
+function deleteNote(id){ if(!confirm('Delete?'))return; let x=JSON.parse(localStorage.notes||'[]').filter(o=>o.id!==id); localStorage.notes=JSON.stringify(x); if(editingNoteId===id)cancelEditNote(); renderNotes(); updateDashboard(); }
+function renderNotes(){ const q=notesearch.value.toLowerCase(); let x=JSON.parse(localStorage.notes||'[]').filter(o=>(o.title+o.body).toLowerCase().includes(q)); x.sort((a,b)=>(b.timestamp||b.id)-(a.timestamp||a.id)); if(!x.length){notelist.innerHTML='<p>No notes.</p>';return;} notelist.innerHTML=x.map(o=>`<div class='card'><strong>${o.title}</strong><br><small>${o.created||''}</small><p>${o.body}</p><div style='display:flex;gap:8px;margin-top:10px;'><button onclick='editNote(${o.id})' class='btn-edit'>Edit</button><button onclick='deleteNote(${o.id})' class='btn-delete'>Delete</button></div></div>`).join(''); }
+
+function updateDashboard(){ const t=JSON.parse(localStorage.tasks||'[]'),e=JSON.parse(localStorage.events||'[]'),n=JSON.parse(localStorage.notes||'[]'); const p=t.filter(x=>!x.done).length; dashstats.innerHTML=`<div class='card'>📝 <b>${p}</b> pending tasks.</div><div class='card'>✅ <b>${t.length}</b> total tasks.</div><div class='card'>📅 <b>${e.length}</b> events.</div><div class='card'>📒 <b>${n.length}</b> notes.</div>`; }
+function exportData(){ const d={tasks:JSON.parse(localStorage.tasks||'[]'),events:JSON.parse(localStorage.events||'[]'),notes:JSON.parse(localStorage.notes||'[]')}; const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download='backup.json'; a.click(); }
+function importData(i){ const f=i.files[0]; if(!f)return; const r=new FileReader(); r.onload=e=>{ try{ const d=JSON.parse(e.target.result); localStorage.tasks=JSON.stringify(d.tasks||[]); localStorage.events=JSON.stringify(d.events||[]); localStorage.notes=JSON.stringify(d.notes||[]); renderTasks(); renderEvents(); renderNotes(); updateDashboard(); alert('Restored!'); }catch(err){alert('Invalid');} }; r.readAsText(f); }
+
+renderTasks(); renderEvents(); renderNotes(); updateDashboard();
+</script>
+</body>
+</html>
